@@ -2,7 +2,7 @@
 A smart virtual assistant web app built with React (using Vite) with backend support running separately in Docker.
 
 ### Frontend Instructions
-## To run frontend locally
+#### To run frontend locally
 1. Clone the repository
 ```
 git clone https://github.com/harsha-2703/virtual-assistant-frontend.git
