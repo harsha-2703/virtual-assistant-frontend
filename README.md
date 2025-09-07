@@ -1,6 +1,8 @@
 ### Project Overview
 A smart virtual assistant web app built with React (using Vite) with backend support running separately in Docker.
 
+---
+
 ### Frontend Instructions
 #### To run frontend locally
 1. Clone the repository
@@ -19,6 +21,8 @@ npm install
 npm run dev
 ```
 
+---
+
 ### Testing the Website
 You can also test the frontend live:
 [Virtual Assistant Website](https://smart-virtual-assistant.netlify.app/)
@@ -34,6 +38,8 @@ docker pull rharsharaj/virtual-assistant-backend:latest
 ```
 docker run -it -p 8000:8000 -v ollama-models:/root/.ollama rharsharaj/virtual-assistant-backend:latest
 ```
+
+---
 
 ### Note:
 * Frontend runs at https://smart-virtual-assistant.netlify.app/
