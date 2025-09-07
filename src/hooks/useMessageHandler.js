@@ -3,7 +3,7 @@ import axios from "axios";
 
 function useMessageHandler(setMessages, webcamRef) {
   const [isTyping, setIsTyping] = useState(false);
-  const apiUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+  const apiUrl = import.meta.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 
   const sendMessage = async (userMessage) => {
     if (!userMessage.trim()) return;
@@ -77,3 +77,4 @@ function useMessageHandler(setMessages, webcamRef) {
 
 
 export default useMessageHandler;
+
