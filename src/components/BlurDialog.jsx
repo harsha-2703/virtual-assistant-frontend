@@ -51,6 +51,7 @@ function BlurDialog({
                         
                         <div className="flex flex-row items-center space-x-4 relative">
                             <input
+                            type="password"
                             ref={inputRef}
                             value={apiKey}
                             onChange={(e) => setApiKey(e.target.value)}
@@ -178,5 +179,6 @@ function BlurDialog({
         </>
   );
 }
+
 
 export default BlurDialog;
