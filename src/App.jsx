@@ -7,7 +7,7 @@ import WebcamCapture from "./components/WebcamCapture";
 import axios from "axios";
 
 function App() {
-  const apiUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+  const apiUrl = import.meta.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
   const [apiKey, setApiKey] = useState("");
   const [loadingApiKey, setLoadingApiKey] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
