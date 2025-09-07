@@ -25,7 +25,7 @@ npm run dev
 
 ### Testing the Website
 You can also test the frontend live:
-[Virtual Assistant Website](https://smart-virtual-assistant.netlify.app/)
+[Virtual Assistant](https://smart-virtual-assistant.netlify.app/)
 
 ### Backend Instructions
 ## To run backend locally
