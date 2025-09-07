@@ -27,8 +27,10 @@ npm run dev
 You can also test the frontend live:
 [Virtual Assistant](https://smart-virtual-assistant.netlify.app/)
 
+---
+
 ### Backend Instructions
-## To run backend locally
+#### To run backend locally
 1. Pull the backend image from Docker Hub
 ```
 docker pull rharsharaj/virtual-assistant-backend:latest
@@ -42,5 +44,5 @@ docker run -it -p 8000:8000 -v ollama-models:/root/.ollama rharsharaj/virtual-as
 ---
 
 ### Note:
-* Frontend runs at https://smart-virtual-assistant.netlify.app/
-* Backend runs at http://localhost:8000
+* Frontend live site: https://smart-virtual-assistant.netlify.app/
+* Backend runs locally at: http://localhost:8000
