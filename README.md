@@ -1,12 +1,40 @@
-# React + Vite
+### Project Overview
+A smart virtual assistant web app built with React (using Vite) with backend support running separately in Docker.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Frontend Instructions
+## To run frontend locally
+1. Clone the repository
+```
+git clone https://github.com/harsha-2703/virtual-assistant-frontend.git
+cd virtual-assistant-frontend
+```
 
-Currently, two official plugins are available:
+2. Install dependencies
+```
+npm install
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+3. Run the application
+```
+npm run dev
+```
 
-## Expanding the ESLint configuration
+### Testing the Website
+You can also test the frontend live:
+[Virtual Assistant Website](https://smart-virtual-assistant.netlify.app/)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Backend Instructions
+## To run backend locally
+1. Pull the backend image from Docker Hub
+```
+docker pull rharsharaj/virtual-assistant-backend:latest
+```
+
+2. Run the backend container
+```
+docker run -it -p 8000:8000 -v ollama-models:/root/.ollama rharsharaj/virtual-assistant-backend:latest
+```
+
+### Note:
+* Frontend runs at https://smart-virtual-assistant.netlify.app/
+* Backend runs at http://localhost:8000
