@@ -1,5 +1,7 @@
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import { useEffect } from "react";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
   const {
@@ -13,20 +15,16 @@ const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop 
     return null;
   }
 
-  // 🎯 Only control mic in autoStop mode — browser needs gesture otherwise
+  // Control STT start/stop
   useEffect(() => {
-    if (!autoStop) return;
-
-    const shouldListen = listening && !isSpeaking;
+    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
 
     if (shouldListen) {
-      console.log("🎤 AutoStart STT");
       SpeechRecognition.startListening({
         continuous: isContinuous,
         language: "en-US",
       });
     } else {
-      console.log("🎤 AutoStop STT");
       SpeechRecognition.stopListening();
     }
 
@@ -35,27 +33,27 @@ const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop 
     };
   }, [listening, isContinuous, isSpeaking, autoStop]);
 
-  // 📤 Manual mode: submit when user stops
+  // Normal (manual) mode: submit when listening stops
   useEffect(() => {
-    if (!autoStop && !listening && transcript.trim() !== "") {
+    if (!listening && transcript.trim() !== "") {
       onResult(transcript.trim());
       resetTranscript();
     }
-  }, [listening, transcript, onResult, resetTranscript, autoStop]);
+  }, [listening, transcript, onResult, resetTranscript]);
 
-  // 🤖 Auto mode: debounce submit on pause
+  // Auto mode: debounce submit on pause
   useEffect(() => {
     if (autoStop && isContinuous && transcript.trim() !== "") {
       const debounce = setTimeout(() => {
         onResult(transcript.trim());
         resetTranscript();
-      }, 1500);
+      }, 1500); // pause = end of speech
 
       return () => clearTimeout(debounce);
     }
   }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
 
-  return null; // invisible listener
+  return null;
 };
 
 export default SpeechToText;
