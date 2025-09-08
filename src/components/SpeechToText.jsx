@@ -17,21 +17,32 @@ const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop 
 
   // Control STT start/stop
   useEffect(() => {
-    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
+  const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
+  if (shouldListen) {
+    console.log("🔊 Starting STT");
+    SpeechRecognition.startListening({
+      continuous: isContinuous,
+      language: "en-US",
+    });
+  } else {
+    console.log("🛑 Stopping STT");
+    SpeechRecognition.stopListening();
+  }
 
-    if (shouldListen) {
-      SpeechRecognition.startListening({
-        continuous: isContinuous,
-        language: "en-US",
-      });
-    } else {
-      SpeechRecognition.stopListening();
-    }
+  // ❌ Remove this part completely
+  // return () => {
+  //   SpeechRecognition.abortListening();
+  // };
+}, [listening, isContinuous, isSpeaking, autoStop]);
 
-    return () => {
-      SpeechRecognition.abortListening();
-    };
-  }, [listening, isContinuous, isSpeaking, autoStop]);
+// ✅ Add separate useEffect for cleanup ONLY on unmount
+useEffect(() => {
+  return () => {
+    console.log("🧹 Component unmounted → abort STT");
+    SpeechRecognition.abortListening();
+  };
+}, []);
+
 
   // Normal (manual) mode: submit when listening stops
   useEffect(() => {
