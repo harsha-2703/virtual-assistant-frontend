@@ -40,7 +40,17 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         {!autoStop && (
           <button
             type="button"
-            onClick={!isOpen ? () => setListening(!listening) : undefined}
+            onClick={() => {
+    if (listening) {
+      console.log("🔴 Stopping mic");
+      SpeechRecognition.stopListening();
+      setListening(false);
+    } else {
+      console.log("🟢 Starting mic");
+      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
+      setListening(true);
+    }
+  }}
             disabled={isOpen}
             aria-label={listening ? "Stop listening" : "Start listening"}
             className="transition-transform hover:scale-105 focus:outline-none disabled:opacity-60"
