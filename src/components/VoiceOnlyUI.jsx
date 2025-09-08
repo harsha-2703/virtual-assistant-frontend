@@ -5,6 +5,7 @@ import ChatWindow from "./ChatWindow";
 import SpeechToText from "./SpeechToText";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
+import SpeechRecognition from "react-speech-recognition";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
   const [listening, setListening] = useState(autoStop || false);
@@ -16,6 +17,15 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
   useEffect(() => {
     setListening(autoStop);
   }, [autoStop]);
+
+  // Explicitly start/stop listening when `listening` changes
+  useEffect(() => {
+    if (listening) {
+      SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+    } else {
+      SpeechRecognition.stopListening();
+    }
+  }, [listening]);
 
   const handleSpeechResult = (text) => {
     if (text.trim()) {
@@ -55,7 +65,6 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
           onResult={handleSpeechResult}
           listening={listening}
           isContinuous={true}
-          //autoStop={autoStop}
         />
       </div>
     </>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import { useSpeechRecognition } from "react-speech-recognition";
 
-const SpeechToText = ({ onResult, listening, isContinuous }) => {
+const SpeechToText = ({ onResult, listening }) => {
   const {
     transcript,
     resetTranscript,
@@ -15,23 +15,14 @@ const SpeechToText = ({ onResult, listening, isContinuous }) => {
     return null;
   }
 
-  useEffect(() => {
-    if (listening) {
-      SpeechRecognition.startListening({
-        continuous: isContinuous,
-        language: "en-IN",
-      });
-    } else {
-      SpeechRecognition.stopListening();
-    }
-  }, [listening, isContinuous]);
-
+  // Only send new transcripts when listening stops
   useEffect(() => {
     const trimmed = transcript.trim();
 
     if (!listening && trimmed) {
-      // Get the new text only (remove what was already sent)
       let newText = trimmed;
+
+      // Remove text already submitted
       if (trimmed.startsWith(lastSubmittedRef.current)) {
         newText = trimmed.slice(lastSubmittedRef.current.length).trim();
       }
