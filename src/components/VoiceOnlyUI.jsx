@@ -7,7 +7,6 @@ import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [listening, setListening] = useState(autoStop || false);
   const messagesEndRef = useRef(null);
   const { sendMessage, isTyping } = useMessageHandler(setMessages, webcamRef);
@@ -33,7 +32,6 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         isTyping={isTyping}
         showWebCam={showWebCam}
         mode={"vo"}
-        setIsSpeaking={setIsSpeaking}
       />
 
       <div className="mt-8 flex justify-center items-center gap-6">
@@ -57,8 +55,7 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
           onResult={handleSpeechResult}
           listening={listening}
           isContinuous={true}
-          isSpeaking={isSpeaking}
-          autoStop={autoStop}
+          //autoStop={autoStop}
         />
       </div>
     </>

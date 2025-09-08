@@ -1,57 +1,49 @@
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
-const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
+const SpeechToText = ({ onResult, listening, isContinuous }) => {
   const {
     transcript,
     resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
+  const lastSubmittedRef = useRef("");
+
   if (!browserSupportsSpeechRecognition) {
     console.warn("Browser does not support speech recognition.");
     return null;
   }
 
-  // Control STT start/stop
   useEffect(() => {
-    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
-
-    if (shouldListen) {
+    if (listening) {
       SpeechRecognition.startListening({
         continuous: isContinuous,
-        language: "en-US",
+        language: "en-IN",
       });
     } else {
       SpeechRecognition.stopListening();
     }
+  }, [listening, isContinuous]);
 
-    return () => {
-      SpeechRecognition.abortListening();
-    };
-  }, [listening, isContinuous, isSpeaking, autoStop]);
-
-  // Normal (manual) mode: submit when listening stops
   useEffect(() => {
-    if (!listening && transcript.trim() !== "") {
-      onResult(transcript.trim());
+    const trimmed = transcript.trim();
+
+    if (!listening && trimmed) {
+      // Get the new text only (remove what was already sent)
+      let newText = trimmed;
+      if (trimmed.startsWith(lastSubmittedRef.current)) {
+        newText = trimmed.slice(lastSubmittedRef.current.length).trim();
+      }
+
+      if (newText) {
+        onResult(newText);
+        lastSubmittedRef.current = trimmed;
+      }
+
       resetTranscript();
     }
   }, [listening, transcript, onResult, resetTranscript]);
-
-  // Auto mode: debounce submit on pause
-  useEffect(() => {
-    if (autoStop && isContinuous && transcript.trim() !== "") {
-      const debounce = setTimeout(() => {
-        onResult(transcript.trim());
-        resetTranscript();
-      }, 1500); // pause = end of speech
-
-      return () => clearTimeout(debounce);
-    }
-  }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
 
   return null;
 };
