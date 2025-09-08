@@ -1,12 +1,10 @@
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import { useEffect } from "react";
 
 const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
-  const {
-    finalTranscript,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+  const { finalTranscript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
     console.warn("Browser does not support speech recognition.");
@@ -15,36 +13,35 @@ const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop 
 
   // Control STT start/stop
   useEffect(() => {
-    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
+  const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
 
-    if (shouldListen) {
-      SpeechRecognition.startListening({
-        continuous: isContinuous,
-        language: "en-US",
-      });
-    } else {
-      SpeechRecognition.stopListening();
-    }
-  }, [listening, isContinuous, isSpeaking, autoStop]);
+  if (shouldListen) {
+    SpeechRecognition.startListening({ continuous: isContinuous, language: "en-US" });
+  } else {
+    SpeechRecognition.stopListening();
+  }
+}, [listening, isContinuous, isSpeaking, autoStop]);
+
 
   // Manual mode: submit once when user stops
-  useEffect(() => {
-    if (!autoStop && !listening && finalTranscript.trim() !== "") {
+useEffect(() => {
+  if (!autoStop && !listening && finalTranscript.trim() !== "") {
+    onResult(finalTranscript.trim());
+    resetTranscript();
+  }
+}, [finalTranscript, listening, autoStop, onResult, resetTranscript]);
+
+// Auto mode: submit once per pause
+useEffect(() => {
+  if (autoStop && finalTranscript.trim() !== "" && !isSpeaking) {
+    const debounce = setTimeout(() => {
       onResult(finalTranscript.trim());
       resetTranscript();
-    }
-  }, [listening, finalTranscript, onResult, resetTranscript, autoStop]);
+    }, 1500);
+    return () => clearTimeout(debounce);
+  }
+}, [finalTranscript, autoStop, isSpeaking, onResult, resetTranscript]);
 
-  // Auto mode: submit once per pause
-  useEffect(() => {
-    if (autoStop && isContinuous && finalTranscript.trim() !== "") {
-      const debounce = setTimeout(() => {
-        onResult(finalTranscript.trim());
-        resetTranscript();
-      }, 1500);
-      return () => clearTimeout(debounce);
-    }
-  }, [finalTranscript, isContinuous, autoStop, onResult, resetTranscript]);
 
   return null;
 };
