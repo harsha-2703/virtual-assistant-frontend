@@ -19,10 +19,15 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
   }, [autoStop]);
 
   const handleSpeechResult = (text) => {
+    console.log("Speech result received:", text);
     if (text.trim()) {
       sendMessage(text);
     }
   };
+
+  useEffect(() => {
+  console.log("Listening state changed:", listening, "isSpeaking:", isSpeaking);
+}, [listening, isSpeaking]);
 
   return (
     <>
@@ -40,7 +45,10 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         {!autoStop && (
           <button
             type="button"
-            onClick={!isOpen ? () => setListening(!listening) : undefined}
+            onClick={!isOpen ? () => {
+  console.log("Mic button clicked. Current listening:", listening);
+  setListening(!listening);
+} : undefined}
             disabled={isOpen}
             aria-label={listening ? "Stop listening" : "Start listening"}
             className="transition-transform hover:scale-105 focus:outline-none disabled:opacity-60"

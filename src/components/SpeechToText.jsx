@@ -16,42 +16,53 @@ const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop 
   }
 
   // Control STT start/stop
-  useEffect(() => {
-    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
+useEffect(() => {
+  const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
+  console.log("SpeechToText: useEffect triggered. shouldListen:", shouldListen, "listening:", listening, "isSpeaking:", isSpeaking);
 
-    if (shouldListen) {
-      SpeechRecognition.startListening({
-        continuous: isContinuous,
-        language: "en-US",
-      });
-    } else {
-      SpeechRecognition.stopListening();
-    }
+  if (shouldListen) {
+    console.log("Calling SpeechRecognition.startListening");
+    SpeechRecognition.startListening({
+      continuous: isContinuous,
+      language: "en-US",
+    });
+  } else {
+    console.log("Calling SpeechRecognition.stopListening");
+    SpeechRecognition.stopListening();
+  }
 
-    return () => {
-      SpeechRecognition.abortListening();
-    };
-  }, [listening, isContinuous, isSpeaking, autoStop]);
+  return () => {
+    console.log("Aborting listening");
+    SpeechRecognition.abortListening();
+  };
+}, [listening, isContinuous, isSpeaking, autoStop]);
 
-  // Normal (manual) mode: submit when listening stops
-  useEffect(() => {
-    if (!listening && transcript.trim() !== "") {
+// Normal (manual) mode
+useEffect(() => {
+  if (!listening && transcript.trim() !== "") {
+    console.log("Manual mode: sending transcript:", transcript.trim());
+    onResult(transcript.trim());
+    resetTranscript();
+  }
+}, [listening, transcript, onResult, resetTranscript]);
+
+// Auto mode
+useEffect(() => {
+  if (autoStop && isContinuous && transcript.trim() !== "") {
+    console.log("Auto mode: detected transcript, starting debounce:", transcript.trim());
+    const debounce = setTimeout(() => {
+      console.log("Auto mode: sending transcript after pause:", transcript.trim());
       onResult(transcript.trim());
       resetTranscript();
-    }
-  }, [listening, transcript, onResult, resetTranscript]);
+    }, 1500);
 
-  // Auto mode: debounce submit on pause
-  useEffect(() => {
-    if (autoStop && isContinuous && transcript.trim() !== "") {
-      const debounce = setTimeout(() => {
-        onResult(transcript.trim());
-        resetTranscript();
-      }, 1500); // pause = end of speech
+    return () => {
+      console.log("Clearing debounce");
+      clearTimeout(debounce);
+    };
+  }
+}, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
 
-      return () => clearTimeout(debounce);
-    }
-  }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
 
   return null;
 };
