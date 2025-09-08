@@ -5,7 +5,6 @@ import ChatWindow from "./ChatWindow";
 import SpeechToText from "./SpeechToText";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
-import SpeechRecognition from "react-speech-recognition";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -15,18 +14,13 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
 
   useAutoScroll(messages, messagesEndRef);
 
+  useEffect(() => {
+    setListening(autoStop);
+  }, [autoStop]);
 
   const handleSpeechResult = (text) => {
-    if (text.trim()) sendMessage(text);
-  };
-
-  const toggleListening = () => {
-    if (listening) {
-      SpeechRecognition.stopListening();
-      setListening(false);
-    } else {
-      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
-      setListening(true);
+    if (text.trim()) {
+      sendMessage(text);
     }
   };
 
@@ -38,7 +32,7 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         messagesEndRef={messagesEndRef}
         isTyping={isTyping}
         showWebCam={showWebCam}
-        mode="vo"
+        mode={"vo"}
         setIsSpeaking={setIsSpeaking}
       />
 
@@ -46,7 +40,7 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         {!autoStop && (
           <button
             type="button"
-            onClick={!isOpen ? toggleListening : undefined}
+            onClick={!isOpen ? () => setListening(!listening) : undefined}
             disabled={isOpen}
             aria-label={listening ? "Stop listening" : "Start listening"}
             className="transition-transform hover:scale-105 focus:outline-none disabled:opacity-60"
@@ -62,8 +56,9 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         <SpeechToText
           onResult={handleSpeechResult}
           listening={listening}
-          autoStop={autoStop}
+          isContinuous={true}
           isSpeaking={isSpeaking}
+          autoStop={autoStop}
         />
       </div>
     </>
