@@ -15,9 +15,6 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
 
   useAutoScroll(messages, messagesEndRef);
 
-  useEffect(() => {
-    setListening(autoStop);
-  }, [autoStop]);
 
   const handleSpeechResult = (text) => {
     if (text.trim()) sendMessage(text);
