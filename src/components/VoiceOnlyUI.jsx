@@ -5,6 +5,7 @@ import ChatWindow from "./ChatWindow";
 import SpeechToText from "./SpeechToText";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
+import SpeechRecognition from "react-speech-recognition";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
