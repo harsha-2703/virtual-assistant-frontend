@@ -5,7 +5,6 @@ import ChatWindow from "./ChatWindow";
 import SpeechToText from "./SpeechToText";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
-import SpeechRecognition from "react-speech-recognition";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -41,17 +40,7 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         {!autoStop && (
           <button
             type="button"
-            onClick={() => {
-    if (listening) {
-      console.log("🔴 Stopping mic");
-      SpeechRecognition.stopListening();
-      setListening(false);
-    } else {
-      console.log("🟢 Starting mic");
-      SpeechRecognition.startListening({ continuous: true, language: "en-US" });
-      setListening(true);
-    }
-  }}
+            onClick={!isOpen ? () => setListening(!listening) : undefined}
             disabled={isOpen}
             aria-label={listening ? "Stop listening" : "Start listening"}
             className="transition-transform hover:scale-105 focus:outline-none disabled:opacity-60"
