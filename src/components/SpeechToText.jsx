@@ -11,18 +11,17 @@ const SpeechToText = ({ onResult, listening }) => {
   const lastSubmittedRef = useRef("");
 
   if (!browserSupportsSpeechRecognition) {
-    console.warn("Browser does not support speech recognition.");
+    console.warn("🚫 Browser does not support speech recognition.");
     return null;
   }
 
-  // Only send new transcripts when listening stops
   useEffect(() => {
     const trimmed = transcript.trim();
+    console.log("🧠 Live transcript:", trimmed);
 
     if (!listening && trimmed) {
       let newText = trimmed;
 
-      // Remove text already submitted
       if (trimmed.startsWith(lastSubmittedRef.current)) {
         newText = trimmed.slice(lastSubmittedRef.current.length).trim();
       }
@@ -30,9 +29,8 @@ const SpeechToText = ({ onResult, listening }) => {
       if (newText) {
         onResult(newText);
         lastSubmittedRef.current = trimmed;
+        resetTranscript();
       }
-
-      resetTranscript();
     }
   }, [listening, transcript, onResult, resetTranscript]);
 
