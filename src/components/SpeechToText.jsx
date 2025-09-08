@@ -1,59 +1,54 @@
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
-import { useEffect } from "react";
+import React from "react";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
-const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
+function SpeechToText() {
   const {
     transcript,
+    listening,
     resetTranscript,
-    browserSupportsSpeechRecognition,
+    browserSupportsSpeechRecognition
   } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
-    console.warn("Browser does not support speech recognition.");
-    return null;
+    return <span>Your browser does not support speech recognition.</span>;
   }
 
-  // Control STT start/stop
-  useEffect(() => {
-    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
+  const startListening = () =>
+    SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
 
-    if (shouldListen) {
-      SpeechRecognition.startListening({
-        continuous: isContinuous,
-        language: "en-US",
-      });
-    } else {
-      SpeechRecognition.stopListening();
-    }
+  return (
+    <div className="p-4 space-y-3">
+      <h2 className="text-xl font-semibold">React Speech Recognition Demo</h2>
+      <p className="text-gray-600">
+        Microphone: {listening ? "🎙️ Listening..." : "❌ Off"}
+      </p>
 
-    return () => {
-      SpeechRecognition.abortListening();
-    };
-  }, [listening, isContinuous, isSpeaking, autoStop]);
+      <div className="space-x-2">
+        <button
+          onClick={startListening}
+          className="px-3 py-2 bg-green-500 text-white rounded"
+        >
+          Start
+        </button>
+        <button
+          onClick={SpeechRecognition.stopListening}
+          className="px-3 py-2 bg-red-500 text-white rounded"
+        >
+          Stop
+        </button>
+        <button
+          onClick={resetTranscript}
+          className="px-3 py-2 bg-gray-500 text-white rounded"
+        >
+          Reset
+        </button>
+      </div>
 
-  // Normal (manual) mode: submit when listening stops
-  useEffect(() => {
-    if (!listening && transcript.trim() !== "") {
-      onResult(transcript.trim());
-      resetTranscript();
-    }
-  }, [listening, transcript, onResult, resetTranscript]);
-
-  // Auto mode: debounce submit on pause
-  useEffect(() => {
-    if (autoStop && isContinuous && transcript.trim() !== "") {
-      const debounce = setTimeout(() => {
-        onResult(transcript.trim());
-        resetTranscript();
-      }, 1500); // pause = end of speech
-
-      return () => clearTimeout(debounce);
-    }
-  }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
-
-  return null;
-};
+      <div className="mt-4 p-3 border rounded bg-gray-100">
+        <p className="font-mono">{transcript || "Say something..."}</p>
+      </div>
+    </div>
+  );
+}
 
 export default SpeechToText;

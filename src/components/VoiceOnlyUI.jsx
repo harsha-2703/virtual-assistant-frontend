@@ -54,11 +54,11 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         )}
 
         <SpeechToText
-          onResult={handleSpeechResult}
-          listening={listening}
-          isContinuous={true}
-          isSpeaking={isSpeaking}
-          autoStop={autoStop}
+          // onResult={handleSpeechResult}
+          // listening={listening}
+          // isContinuous={true}
+          // isSpeaking={isSpeaking}
+          // autoStop={autoStop}
         />
       </div>
     </>
