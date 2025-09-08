@@ -1,11 +1,9 @@
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { useEffect } from "react";
 
 const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
   const {
-    transcript,
+    finalTranscript,
     resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
@@ -27,31 +25,26 @@ const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop 
     } else {
       SpeechRecognition.stopListening();
     }
-
-    return () => {
-      SpeechRecognition.abortListening();
-    };
   }, [listening, isContinuous, isSpeaking, autoStop]);
 
-  // Normal (manual) mode: submit when listening stops
+  // Manual mode: submit once when user stops
   useEffect(() => {
-    if (!listening && transcript.trim() !== "") {
-      onResult(transcript.trim());
+    if (!autoStop && !listening && finalTranscript.trim() !== "") {
+      onResult(finalTranscript.trim());
       resetTranscript();
     }
-  }, [listening, transcript, onResult, resetTranscript]);
+  }, [listening, finalTranscript, onResult, resetTranscript, autoStop]);
 
-  // Auto mode: debounce submit on pause
+  // Auto mode: submit once per pause
   useEffect(() => {
-    if (autoStop && isContinuous && transcript.trim() !== "") {
+    if (autoStop && isContinuous && finalTranscript.trim() !== "") {
       const debounce = setTimeout(() => {
-        onResult(transcript.trim());
+        onResult(finalTranscript.trim());
         resetTranscript();
-      }, 1500); // pause = end of speech
-
+      }, 1500);
       return () => clearTimeout(debounce);
     }
-  }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
+  }, [finalTranscript, isContinuous, autoStop, onResult, resetTranscript]);
 
   return null;
 };
