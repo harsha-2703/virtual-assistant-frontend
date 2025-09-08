@@ -1,54 +1,61 @@
-import React from "react";
+import { useEffect } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
-function SpeechToText() {
+const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
   const {
     transcript,
-    listening,
     resetTranscript,
-    browserSupportsSpeechRecognition
+    browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
-    return <span>Your browser does not support speech recognition.</span>;
+    console.warn("Browser does not support speech recognition.");
+    return null;
   }
 
-  const startListening = () =>
-    SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+  // 🎯 Only control mic in autoStop mode — browser needs gesture otherwise
+  useEffect(() => {
+    if (!autoStop) return;
 
-  return (
-    <div className="p-4 space-y-3">
-      <h2 className="text-xl font-semibold">React Speech Recognition Demo</h2>
-      <p className="text-gray-600">
-        Microphone: {listening ? "🎙️ Listening..." : "❌ Off"}
-      </p>
+    const shouldListen = listening && !isSpeaking;
 
-      <div className="space-x-2">
-        <button
-          onClick={startListening}
-          className="px-3 py-2 bg-green-500 text-white rounded"
-        >
-          Start
-        </button>
-        <button
-          onClick={SpeechRecognition.stopListening}
-          className="px-3 py-2 bg-red-500 text-white rounded"
-        >
-          Stop
-        </button>
-        <button
-          onClick={resetTranscript}
-          className="px-3 py-2 bg-gray-500 text-white rounded"
-        >
-          Reset
-        </button>
-      </div>
+    if (shouldListen) {
+      console.log("🎤 AutoStart STT");
+      SpeechRecognition.startListening({
+        continuous: isContinuous,
+        language: "en-US",
+      });
+    } else {
+      console.log("🎤 AutoStop STT");
+      SpeechRecognition.stopListening();
+    }
 
-      <div className="mt-4 p-3 border rounded bg-gray-100">
-        <p className="font-mono">{transcript || "Say something..."}</p>
-      </div>
-    </div>
-  );
-}
+    return () => {
+      SpeechRecognition.abortListening();
+    };
+  }, [listening, isContinuous, isSpeaking, autoStop]);
+
+  // 📤 Manual mode: submit when user stops
+  useEffect(() => {
+    if (!autoStop && !listening && transcript.trim() !== "") {
+      onResult(transcript.trim());
+      resetTranscript();
+    }
+  }, [listening, transcript, onResult, resetTranscript, autoStop]);
+
+  // 🤖 Auto mode: debounce submit on pause
+  useEffect(() => {
+    if (autoStop && isContinuous && transcript.trim() !== "") {
+      const debounce = setTimeout(() => {
+        onResult(transcript.trim());
+        resetTranscript();
+      }, 1500);
+
+      return () => clearTimeout(debounce);
+    }
+  }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
+
+  return null; // invisible listener
+};
 
 export default SpeechToText;
