@@ -1,48 +1,59 @@
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import { useEffect } from "react";
-const SpeechToText = ({ onResult, autoStop, isSpeaking }) => {
-  const { finalTranscript, resetTranscript, listening, browserSupportsSpeechRecognition } =
-    useSpeechRecognition();
+
+const SpeechToText = ({ onResult, listening, isContinuous, isSpeaking, autoStop }) => {
+  const {
+    transcript,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
     console.warn("Browser does not support speech recognition.");
     return null;
   }
 
-  const startListening = () => {
-    SpeechRecognition.startListening({
-      continuous: true,
-      language: "en-US",
-    });
-  };
-
-  const stopListening = () => {
-    SpeechRecognition.stopListening();
-  };
-
-  // Watch finalTranscript and submit if needed
+  // Control STT start/stop
   useEffect(() => {
-    if (finalTranscript.trim() !== "") {
-      if (!autoStop && !listening) {
-        onResult(finalTranscript.trim());
-        resetTranscript();
-      }
-      if (autoStop && !isSpeaking) {
-        const debounce = setTimeout(() => {
-          onResult(finalTranscript.trim());
-          resetTranscript();
-        }, 1500);
-        return () => clearTimeout(debounce);
-      }
-    }
-  }, [finalTranscript, autoStop, isSpeaking, listening, onResult, resetTranscript]);
+    const shouldListen = autoStop ? (listening && !isSpeaking) : listening;
 
-  return (
-    <div>
-      <button onClick={startListening}>Start</button>
-      <button onClick={stopListening}>Stop</button>
-    </div>
-  );
+    if (shouldListen) {
+      SpeechRecognition.startListening({
+        continuous: isContinuous,
+        language: "en-US",
+      });
+    } else {
+      SpeechRecognition.stopListening();
+    }
+
+    return () => {
+      SpeechRecognition.abortListening();
+    };
+  }, [listening, isContinuous, isSpeaking, autoStop]);
+
+  // Normal (manual) mode: submit when listening stops
+  useEffect(() => {
+    if (!listening && transcript.trim() !== "") {
+      onResult(transcript.trim());
+      resetTranscript();
+    }
+  }, [listening, transcript, onResult, resetTranscript]);
+
+  // Auto mode: debounce submit on pause
+  useEffect(() => {
+    if (autoStop && isContinuous && transcript.trim() !== "") {
+      const debounce = setTimeout(() => {
+        onResult(transcript.trim());
+        resetTranscript();
+      }, 1500); // pause = end of speech
+
+      return () => clearTimeout(debounce);
+    }
+  }, [transcript, isContinuous, autoStop, onResult, resetTranscript]);
+
+  return null;
 };
 
 export default SpeechToText;
