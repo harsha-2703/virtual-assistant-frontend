@@ -5,30 +5,38 @@ import ChatWindow from "./ChatWindow";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
 import SpeechToText from "./SpeechToText";
-import SpeechRecognition from "react-speech-recognition";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
   const [listening, setListening] = useState(false);
   const messagesEndRef = useRef(null);
   const { sendMessage, isTyping } = useMessageHandler(setMessages, webcamRef);
 
+  const { transcript, resetTranscript } = useSpeechRecognition();
+
   useAutoScroll(messages, messagesEndRef);
 
   const handleMicToggle = () => {
     if (!listening) {
       console.log("🎙️ Starting listening...");
+      resetTranscript(); // clear old transcript
       SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+      setListening(true);
     } else {
-      console.log("🛑 Stopping listening...");
-      SpeechRecognition.stopListening();
+      handleStop();
     }
-    setListening(!listening);
   };
 
-  const handleSpeechResult = (text) => {
-    console.log("📝 Final transcript sent:", text);
-    if (text.trim()) {
-      sendMessage(text.trim());
+  const handleStop = () => {
+    console.log("🛑 Stopping listening...");
+    SpeechRecognition.stopListening();
+    setListening(false);
+
+    // ✅ Only send when user presses Stop
+    if (transcript.trim()) {
+      console.log("📝 Final transcript sent:", transcript);
+      sendMessage(transcript.trim());
+      resetTranscript();
     }
   };
 
@@ -60,10 +68,7 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
           </button>
         )}
 
-        <SpeechToText
-          onResult={handleSpeechResult}
-          listening={listening}
-        />
+        <SpeechToText listening={listening} />
       </div>
     </>
   );
