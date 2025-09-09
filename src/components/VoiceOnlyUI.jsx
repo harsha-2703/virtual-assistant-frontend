@@ -1,21 +1,28 @@
 import { useRef, useState, useEffect } from "react";
-import { FaStopCircle } from "react-icons/fa";
-import { IoMicCircleSharp } from "react-icons/io5";
 import ChatWindow from "./ChatWindow";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import { FaStopCircle } from "react-icons/fa";
+import { IoMicCircleSharp } from "react-icons/io5";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
   const [listening, setListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef(null);
   const { sendMessage, isTyping } = useMessageHandler(setMessages, webcamRef);
 
-  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const {
+    transcript,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
 
   useAutoScroll(messages, messagesEndRef);
 
-  // 🔍 Log browser support on mount
+  const isContinuous = autoStop; // toggle between manual & continuous
+
+  // ✅ Check browser support
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) {
       console.error("❌ Browser does NOT support Speech Recognition API.");
@@ -24,29 +31,73 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
     }
   }, [browserSupportsSpeechRecognition]);
 
-  // 🔍 Attach global error listener
+  // ✅ Global error listener
   useEffect(() => {
     if ("webkitSpeechRecognition" in window) {
       const recognition = new window.webkitSpeechRecognition();
-      recognition.onerror = (e) => {
-        console.error("⚠️ SpeechRecognition error:", e.error);
-      };
+      recognition.onerror = (e) => console.error("⚠️ SpeechRecognition error:", e.error);
     }
   }, []);
 
+  // 🔄 Continuous mode: start listening automatically and restart on end
+  useEffect(() => {
+    if (!isContinuous || isOpen) return;
+
+    const handleEnd = () => {
+      if (!isSpeaking) {
+        console.log("🔄 Restarting STT after end");
+        SpeechRecognition.startListening({
+          continuous: true,
+          language: "en-IN",
+          onEnd: handleEnd,
+        });
+        setListening(true);
+      }
+    };
+
+    const startContinuous = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true }); // one-time mic request
+        resetTranscript();
+        SpeechRecognition.startListening({
+          continuous: true,
+          language: "en-IN",
+          onEnd: handleEnd,
+        });
+        setListening(true);
+        console.log("🎙️ Continuous STT started");
+      } catch (err) {
+        console.error("❌ Mic permission error", err);
+      }
+    };
+
+    startContinuous();
+  }, [isContinuous, isOpen, isSpeaking, resetTranscript]);
+
+  // ⏱ Auto-submit transcript on pause (debounce)
+  useEffect(() => {
+    if (!isContinuous || !listening || transcript.trim() === "") return;
+
+    if (isSpeaking) return; // pause STT while TTS is speaking
+
+    const debounce = setTimeout(() => {
+      sendMessage(transcript.trim());
+      resetTranscript();
+    }, 1500); // 1.5s pause = end of speech
+
+    return () => clearTimeout(debounce);
+  }, [transcript, isContinuous, listening, isSpeaking, sendMessage, resetTranscript]);
+
+  // 🔘 Manual mic toggle
   const handleMicToggle = async () => {
     if (!listening) {
-      console.log("🎙️ Requesting microphone access...");
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true }); // ensures permission prompt
-        console.log("✅ Microphone permission granted.");
-
+        await navigator.mediaDevices.getUserMedia({ audio: true });
         resetTranscript();
-        console.log("🎙️ Starting listening...");
         SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
         setListening(true);
       } catch (err) {
-        console.error("❌ Microphone permission denied or error:", err);
+        console.error("❌ Mic error:", err);
       }
     } else {
       handleStop();
@@ -54,16 +105,11 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
   };
 
   const handleStop = () => {
-    console.log("🛑 Stopping listening...");
     SpeechRecognition.stopListening();
     setListening(false);
-
     if (transcript.trim()) {
-      console.log("📝 Final transcript sent:", transcript);
       sendMessage(transcript.trim());
       resetTranscript();
-    } else {
-      console.log("ℹ️ No transcript captured.");
     }
   };
 
@@ -76,10 +122,12 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         isTyping={isTyping}
         showWebCam={showWebCam}
         mode="vo"
+        setIsSpeaking={setIsSpeaking} // allow ChatWindow/TTS to pause STT
       />
 
-      <div className="mt-8 flex justify-center items-center gap-6">
-        {!autoStop && (
+      {/* Show mic button only in manual mode */}
+      {!isContinuous && (
+        <div className="mt-8 flex justify-center items-center gap-6">
           <button
             type="button"
             onClick={!isOpen ? handleMicToggle : undefined}
@@ -93,8 +141,8 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
               <IoMicCircleSharp className="size-16 text-gray-700 cursor-pointer" />
             )}
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
