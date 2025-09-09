@@ -4,6 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/virtual-assistant-frontend',
+  base: '/virtual-assistant-frontend/',
   plugins: [react(),tailwindcss()],
 })

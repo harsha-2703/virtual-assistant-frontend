@@ -19,7 +19,11 @@ function ChatWindow({ messages, isOpen, messagesEndRef, isTyping, showWebCam, mo
                     
                     {isTyping && (
                         <div className="self-start bg-gray-200 text-gray-800 px-4 py-2 rounded-2xl max-w-[80%]">
-                        <img src="/typing-dots.gif" alt="Typing..." className="w-12 h-6" />
+                        <img
+                            src={`${import.meta.env.BASE_URL}typing-dots.gif`}
+                            alt="Typing..."
+                            className="w-12 h-6"
+                        />
                         </div>
                     )}
                     <div ref={messagesEndRef} />
