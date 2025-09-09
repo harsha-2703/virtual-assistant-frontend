@@ -20,32 +20,18 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
 
   useAutoScroll(messages, messagesEndRef);
 
-  const isContinuous = autoStop; // toggle between manual & continuous
+  const isContinuous = autoStop;
 
-  // ✅ Check browser support
-  useEffect(() => {
-    if (!browserSupportsSpeechRecognition) {
-      console.error("❌ Browser does NOT support Speech Recognition API.");
-    } else {
-      console.log("✅ Browser supports Speech Recognition API.");
-    }
-  }, [browserSupportsSpeechRecognition]);
+  if (!browserSupportsSpeechRecognition) {
+    alert("Your browser does not support speech recognition. Please use Chrome or Edge.");
+  }
 
-  // ✅ Global error listener
-  useEffect(() => {
-    if ("webkitSpeechRecognition" in window) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.onerror = (e) => console.error("⚠️ SpeechRecognition error:", e.error);
-    }
-  }, []);
-
-  // 🔄 Continuous mode: start listening automatically and restart on end
+  // Continuous mode: start listening automatically and restart on end
   useEffect(() => {
     if (!isContinuous || isOpen) return;
 
     const handleEnd = () => {
       if (!isSpeaking) {
-        console.log("🔄 Restarting STT after end");
         SpeechRecognition.startListening({
           continuous: true,
           language: "en-IN",
@@ -65,16 +51,14 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
           onEnd: handleEnd,
         });
         setListening(true);
-        console.log("🎙️ Continuous STT started");
       } catch (err) {
-        console.error("❌ Mic permission error", err);
+        console.error("Mic permission error", err);
       }
     };
 
     startContinuous();
   }, [isContinuous, isOpen, isSpeaking, resetTranscript]);
 
-  // ⏱ Auto-submit transcript on pause (debounce)
   useEffect(() => {
     if (!isContinuous || !listening || transcript.trim() === "") return;
 
@@ -88,7 +72,6 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
     return () => clearTimeout(debounce);
   }, [transcript, isContinuous, listening, isSpeaking, sendMessage, resetTranscript]);
 
-  // 🔘 Manual mic toggle
   const handleMicToggle = async () => {
     if (!listening) {
       try {
@@ -97,7 +80,7 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
         setListening(true);
       } catch (err) {
-        console.error("❌ Mic error:", err);
+        console.error("Mic error:", err);
       }
     } else {
       handleStop();
@@ -122,10 +105,9 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
         isTyping={isTyping}
         showWebCam={showWebCam}
         mode="vo"
-        setIsSpeaking={setIsSpeaking} // allow ChatWindow/TTS to pause STT
+        setIsSpeaking={setIsSpeaking}
       />
 
-      {/* Show mic button only in manual mode */}
       {!isContinuous && (
         <div className="mt-8 flex justify-center items-center gap-6">
           <button
