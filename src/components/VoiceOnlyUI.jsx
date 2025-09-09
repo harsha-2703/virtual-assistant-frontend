@@ -1,10 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { FaStopCircle } from "react-icons/fa";
 import { IoMicCircleSharp } from "react-icons/io5";
 import ChatWindow from "./ChatWindow";
 import useAutoScroll from "../hooks/useAutoScroll";
 import useMessageHandler from "../hooks/useMessageHandler";
-import SpeechToText from "./SpeechToText";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webcamRef }) {
@@ -12,16 +11,43 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
   const messagesEndRef = useRef(null);
   const { sendMessage, isTyping } = useMessageHandler(setMessages, webcamRef);
 
-  const { transcript, resetTranscript } = useSpeechRecognition();
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   useAutoScroll(messages, messagesEndRef);
 
-  const handleMicToggle = () => {
+  // 🔍 Log browser support on mount
+  useEffect(() => {
+    if (!browserSupportsSpeechRecognition) {
+      console.error("❌ Browser does NOT support Speech Recognition API.");
+    } else {
+      console.log("✅ Browser supports Speech Recognition API.");
+    }
+  }, [browserSupportsSpeechRecognition]);
+
+  // 🔍 Attach global error listener
+  useEffect(() => {
+    if ("webkitSpeechRecognition" in window) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.onerror = (e) => {
+        console.error("⚠️ SpeechRecognition error:", e.error);
+      };
+    }
+  }, []);
+
+  const handleMicToggle = async () => {
     if (!listening) {
-      console.log("🎙️ Starting listening...");
-      resetTranscript(); // clear old transcript
-      SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
-      setListening(true);
+      console.log("🎙️ Requesting microphone access...");
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true }); // ensures permission prompt
+        console.log("✅ Microphone permission granted.");
+
+        resetTranscript();
+        console.log("🎙️ Starting listening...");
+        SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+        setListening(true);
+      } catch (err) {
+        console.error("❌ Microphone permission denied or error:", err);
+      }
     } else {
       handleStop();
     }
@@ -32,11 +58,12 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
     SpeechRecognition.stopListening();
     setListening(false);
 
-    // ✅ Only send when user presses Stop
     if (transcript.trim()) {
       console.log("📝 Final transcript sent:", transcript);
       sendMessage(transcript.trim());
       resetTranscript();
+    } else {
+      console.log("ℹ️ No transcript captured.");
     }
   };
 
@@ -67,8 +94,6 @@ function VoiceOnlyUI({ isOpen, autoStop, messages, setMessages, showWebCam, webc
             )}
           </button>
         )}
-
-        <SpeechToText listening={listening} />
       </div>
     </>
   );
